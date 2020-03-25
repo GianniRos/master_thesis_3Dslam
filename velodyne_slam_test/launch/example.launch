@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="false"/>
+ <arg name="geotiff_map_file_path" default="$(find hector_geotiff)/maps"/>
+  <arg name="world_name" default="$(find velodyne_slam_test)/world/example.world"/>
+
+  <!-- Spawn the example robot -->
+  <arg name="gpu" default="false"/>
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find velodyne_slam_test)/urdf/example.urdf.xacro' gpu:=$(arg gpu)" />
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne2laser" args="0 0 0 0 0 0 /velodyne /laser 100"/>
+ 
+
+	<!-- pointcloud_to_laserscan-->
+	<node pkg= "pointcloud_to_laserscan" type= "pointcloud_to_laserscan_node" name= "pointcloud_to_laserscan">
+		<remap from="cloud_in" to="/velodyne_points"/>
+		<remap from="scan" to="/laser"/>
+		<!--param name="target_frame" value="laser"/-->
+
+       <rosparam>
+            transform_tolerance: 0.01
+            min_height: -0.1
+            max_height: 1<!-- 0.5-->
+
+            angle_min: -1.57 
+            angle_max: 2 
+            angle_increment: 0.0087<!-- M_PI/360.0 -->
+            scan_time: 0.5<!-- 0.3333-->
+            range_min: 0.3<!--45-->
+            range_max: 40<!-- 8 -->
+            use_inf: true
+            inf_epsilon: 1.0
+            concurrency_level: 1
+        </rosparam>
+	</node>
+
+  <!-- 2D slam -->
+  <include file="$(find hector_mapping)/launch/mapping_default.launch"/>
+
+  <include file="$(find hector_geotiff)/launch/geotiff_mapper.launch">
+    <arg name="trajectory_source_frame_name" value="scanmatcher_frame"/>
+    <arg name="map_file_path" value="$(arg geotiff_map_file_path)"/>
+  </include>
+
+
+  <!-- RViz -->
+  <arg name="rviz" default="true"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find velodyne_slam_test)/rviz/example.rviz" />
+
+</launch>
