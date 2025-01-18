@@ -34,7 +34,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [Istituto Italiano di Tecnologia (IIT)](https://www.iit.it)
 - [Velodyne LiDAR](https://velodynelidar.com)
 
----
-
-For more information or inquiries, contact `your.email@domain.com`.
-
